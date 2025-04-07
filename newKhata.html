@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zam Zam Traders</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(to right, #f0f4f8, #d9e2ec);
+    }
+    .card {
+      background-color: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    .highlight {
+      color: #1e3a8a;
+    }
+  </style>
+  <script defer>
+    window.editRecord = function(index) {
+      const record = window.records[index];
+      const newName = prompt('Edit Name:', record.name);
+      const newTotal = parseFloat(prompt('Edit Total:', record.total));
+      const newPaid = parseFloat(prompt('Edit Paid:', record.paid));
+      if (newName && !isNaN(newTotal) && !isNaN(newPaid)) {
+        window.records[index] = { name: newName, total: newTotal, paid: newPaid };
+        renderTable();
+      }
+    };
+
+    function renderTable() {
+      const tableBody = document.getElementById('tableBody');
+      const searchValue = document.getElementById('search').value.toLowerCase();
+      tableBody.innerHTML = '';
+      window.records.forEach((record, index) => {
+        if (!record.name.toLowerCase().includes(searchValue)) return;
+        const due = record.total - record.paid;
+        const row = document.createElement('tr');
+        row.className = due > 0 ? 'bg-red-50' : 'bg-green-50';
+        row.innerHTML = `
+          <td class="border px-4 py-2 font-medium">${record.name}</td>
+          <td class="border px-4 py-2">₹${record.total.toFixed(2)}</td>
+          <td class="border px-4 py-2">₹${record.paid.toFixed(2)}</td>
+          <td class="border px-4 py-2 ${due > 0 ? 'text-red-500 font-semibold' : 'text-green-600'}">₹${due.toFixed(2)}</td>
+          <td class="border px-4 py-2 text-center">
+            <button onclick="editRecord(${index})" class="text-blue-600 underline font-semibold">Edit</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function addRecord() {
+      const nameInput = document.getElementById('name');
+      const totalInput = document.getElementById('total');
+      const paidInput = document.getElementById('paid');
+
+      const name = nameInput.value.trim();
+      const total = parseFloat(totalInput.value);
+      const paid = parseFloat(paidInput.value);
+
+      if (!name || isNaN(total) || isNaN(paid)) return;
+
+      window.records.push({ name, total, paid });
+      nameInput.value = totalInput.value = paidInput.value = '';
+      nameInput.focus();
+      renderTable();
+    }
+
+    function exportToCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,Name,Total Amount,Paid Amount,Due Amount\n";
+      window.records.forEach(record => {
+        const due = (record.total - record.paid).toFixed(2);
+        const row = `${record.name},${record.total.toFixed(2)},${record.paid.toFixed(2)},${due}`;
+        csvContent += row + "\n";
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "zamzam-records.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.records = [
+        { name: 'Faizan', total: 2000, paid: 1500 },
+        { name: 'Arif', total: 3000, paid: 1000 },
+      ];
+
+      document.getElementById('name').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('total').focus();
+      });
+
+      document.getElementById('total').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('paid').focus();
+      });
+
+      document.getElementById('paid').addEventListener('keydown', e => {
+        if (e.key === 'Enter') addRecord();
+      });
+
+      document.getElementById('addBtn').addEventListener('click', addRecord);
+      document.getElementById('search').addEventListener('input', renderTable);
+      document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+
+      renderTable();
+    });
+  </script>
+</head>
+<body class="p-4">
+  <div class="max-w-5xl mx-auto space-y-6">
+    <div class="card text-center p-6">
+      <h1 class="text-4xl font-extrabold highlight mb-2">ZAM ZAM TRADERS</h1>
+      <p class="text-lg font-semibold">PROP - SK KHURSHID HUSSAIN</p>
+      <p class="text-sm text-gray-500">ADDRESS - CHANDICHHAK, RAJENDRAPUR</p>
+    </div>
+
+    <input id="search" type="text" placeholder="🔍 Search by name..." class="mb-4 w-full p-3 border-2 border-blue-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
+    <div class="card overflow-x-auto">
+      <table class="w-full table-auto border-collapse text-center">
+        <thead class="bg-blue-100">
+          <tr>
+            <th class="border px-4 py-2">Name</th>
+            <th class="border px-4 py-2">Total Amount</th>
+            <th class="border px-4 py-2">Paid Amount</th>
+            <th class="border px-4 py-2">Due Amount</th>
+            <th class="border px-4 py-2">Action</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card p-4 grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <input id="name" type="text" placeholder="👤 Name" class="p-2 border rounded shadow-sm" />
+      <input id="total" type="number" placeholder="💰 Total Amount" class="p-2 border rounded shadow-sm" />
+      <input id="paid" type="number" placeholder="💵 Paid Amount" class="p-2 border rounded shadow-sm" />
+      <button id="addBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow">Add Record</button>
+    </div>
+
+    <div class="text-right">
+      <button id="exportBtn" class="mt-4 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded shadow">📁 Export to CSV</button>
+    </div>
+  </div>
+</body>
+</html>
